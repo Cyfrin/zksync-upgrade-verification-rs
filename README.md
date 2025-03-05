@@ -1,7 +1,7 @@
 
 # ZKsync Upgrade Verification Tool
 
-
+ This is a rewrite of the [zksync-upgrade-verification](https://github.com/Cyfrin/zksync-upgrade-verification) tool by [Patrick Collins](https://github.com/PatrickAlphaC), now implemented in Rust. The transition to Rust brings opens the door to significant enhancements, streamlining contributions and enabling the development of new features with greater ease.
 
 ## Installation
 
