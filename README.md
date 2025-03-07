@@ -12,30 +12,13 @@ To install and use the `zkgov-check` tool, follow these steps. Note that the too
 - A ZKsync RPC URL (set as an environment variable, e.g., `export ZKSYNC_RPC_URL=https://zksync-era-rpc.example.com`).
 
 ### Option 1: Install from GitHub Release
-If a binary for your platform is available in the GitHub Release, you can download and install it directly:
 
-1. Download the latest `zkgov-check` binary for your platform (e.g., macOS, Linux) from the [releases page](https://github.com/Cyfrin/zksync-upgrade-verification-rs/releases):
-   ```bash
-   curl -L https://github.com/Cyfrin/zksync-upgrade-verification-rs/releases/download/v0.1.0/zkgov-check-linux -o zkgov-check
-   ```
-   (Replace `zkgov-check-linux` with the appropriate file for your OS, e.g., `zkgov-check-macos`)
+1. Run the install script:
 
-2. Make the binary executable:
-   ```bash
-   chmod +x zkgov-check
-   ```
-
-3. Move it to a system directory (e.g., `/usr/local/bin/` on macOS/Linux):
-   ```bash
-   sudo mv zkgov-check /usr/local/bin/
-   ```
-
-4. Verify the installation:
-   ```bash
-   zkgov-check --help
-   ```
-
-**Note**: If the release doesn’t include a binary for your platform (e.g., Windows), proceed to Option 2.
+```bash
+chmod +x install.sh
+./install.sh
+```
 
 ### Option 2: Build from Source
 If no pre-built binary is available or you prefer to build locally, follow these steps:
