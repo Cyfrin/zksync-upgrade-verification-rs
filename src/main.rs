@@ -10,9 +10,11 @@ use eyre::{eyre, Result};
 use clap::{Parser, Subcommand};
 use std::env;
 use std::str::FromStr;
+use std::fs;
+use serde::{Deserialize, Serialize};
 use reqwest;
 
-const VERSION: &str = "0.0.6";
+const VERSION: &str = "0.0.2";
 const PROPOSAL_CREATED_TOPIC: &str = "0x7d84a6263ae0d98d3329bd7b46bb4e8d6f98cd35a7adb45c274c8b7fd5ebd5e0";
 const DEFAULT_GOVERNOR: &str = "0x76705327e682F2d96943280D99464Ab61219e34f";
 
@@ -22,21 +24,49 @@ struct Cli {
     #[command(subcommand)]
     command: Commands,
 
-    #[arg(long, global = true)]
+    #[arg(long, global = true, help = "RPC URL for zkSync Era (can also be set via ZKSYNC_RPC_URL env var)")]
     rpc_url: Option<String>,
 
-    #[arg(long, global = true, default_value = DEFAULT_GOVERNOR)]
+    #[arg(long, global = true, default_value = DEFAULT_GOVERNOR, help = "Governor contract address")]
     governor: String,
 
-    #[arg(long, global = true)]
+    #[arg(long, global = true, help = "Decode calldata for each transaction")]
     decode: bool,
 }
 
 #[derive(Subcommand)]
 enum Commands {
-    GetZkId { tx_hash: String },
-    GetUpgrades { tx_hash: String },
-    GetEthId { tx_hash: String },
+    #[command(about = "Get the zkSync proposal ID from a transaction hash")]
+    GetZkId { 
+        #[arg(help = "Transaction hash to analyze")]
+        tx_hash: String 
+    },
+    #[command(about = "List proposal actions and Ethereum transactions")]
+    GetUpgrades { 
+        #[arg(help = "Transaction hash to analyze")]
+        tx_hash: String 
+    },
+    #[command(about = "Compute the Ethereum proposal ID from a transaction hash or JSON file")]
+    GetEthId { 
+        #[arg(help = "Transaction hash to analyze (not required if --from-file is used)")]
+        tx_hash: Option<String>,
+        #[arg(long, help = "Path to a JSON file containing proposal data")]
+        from_file: Option<String>,
+    },
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct ProposalCall {
+    target: String,
+    value: String,
+    data: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct ProposalData {
+    executor: String,
+    salt: String,
+    calls: Vec<ProposalCall>,
 }
 
 async fn get_provider(rpc_url: &str) -> Result<Provider<Http>> {
@@ -465,6 +495,48 @@ pub async fn get_eth_id(tx_hash: &str, rpc_url: &str, _governor: &str) -> Result
     Ok(())
 }
 
+pub async fn get_eth_id_from_file(file_path: &str) -> Result<()> {
+    // Read and parse the JSON file
+    let file_content = fs::read_to_string(file_path)?;
+    let proposal: ProposalData = serde_json::from_str(&file_content)?;
+
+    // Convert the proposal data into the format needed for encoding
+    let mut call_tokens = Vec::new();
+    for call in proposal.calls.iter() {
+        let target = Address::from_str(&call.target)?;
+        let value = U256::from_str(&call.value)?;
+        let data = hex::decode(call.data.trim_start_matches("0x"))?;
+        
+        call_tokens.push(Token::Tuple(vec![
+            Token::Address(target),
+            Token::Uint(value),
+            Token::Bytes(data),
+        ]));
+    }
+
+    let executor = Address::from_str(&proposal.executor)?;
+    let salt = hex::decode(proposal.salt.trim_start_matches("0x"))?;
+    if salt.len() != 32 {
+        return Err(eyre!("Salt must be 32 bytes"));
+    }
+
+    let proposal_token = Token::Tuple(vec![
+        Token::Array(call_tokens),
+        Token::Address(executor),
+        Token::FixedBytes(salt),
+    ]);
+
+    // Encode and hash the proposal
+    let encoded_proposal = encode(&[proposal_token]);
+    let hash = keccak256(&encoded_proposal);
+
+    print_header("Ethereum Proposal ID");
+    print_field("Proposal ID", &format!("0x{}", hex::encode(hash)));
+    print_field("Encoded Proposal", &format!("0x{}", hex::encode(&encoded_proposal)));
+
+    Ok(())
+}
+
 fn print_header(header: &str) {
     println!("\n{}", header.underline().bold());
 }
@@ -494,8 +566,14 @@ async fn main() -> Result<()> {
         Commands::GetUpgrades { tx_hash } => {
             get_upgrades(&tx_hash, &rpc_url, cli.decode).await?;
         }
-        Commands::GetEthId { tx_hash } => {
-            get_eth_id(&tx_hash, &rpc_url, &cli.governor).await?;
+        Commands::GetEthId { tx_hash, from_file } => {
+            if let Some(file_path) = from_file {
+                get_eth_id_from_file(&file_path).await?;
+            } else if let Some(tx_hash) = tx_hash {
+                get_eth_id(&tx_hash, &rpc_url, &cli.governor).await?;
+            } else {
+                return Err(eyre!("{}", "Either --from-file or transaction hash must be provided".red().bold()));
+            }
         }
     }
     Ok(())

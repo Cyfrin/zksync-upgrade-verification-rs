@@ -69,7 +69,7 @@ zkgov-check get-upgrades <tx-hash> --rpc-url $ZKSYNC_RPC_URL --decode
 ```
 **Output**: A detailed list of targets, values, and calldata, plus any Ethereum transactions if `sendToL1` is called.
 
-### 3. Compute the Ethereum Proposal ID
+### 3. Compute the Ethereum Proposal ID from a transaction hash:
 Generate the Ethereum-side proposal hash for verification:
 ```bash
 zkgov-check get-eth-id <tx-hash> --rpc-url $ZKSYNC_RPC_URL
@@ -77,6 +77,18 @@ zkgov-check get-eth-id <tx-hash> --rpc-url $ZKSYNC_RPC_URL
 **Output**: The Keccak-256 hash for each Ethereum transaction in the proposal, e.g.:
 ```
 Ethereum proposal ID #1: 0x5ebd899d...
+```
+
+### 4. Compute the Ethereum Proposal ID from a proposale file (json):
+Generate the Ethereum-side proposal hash for verification:
+```bash
+zkgov-check get-eth-id --from-file <json-file>
+```
+**Output**: The Keccak-256 hash for the calls in the json file (see the file structure [here](/test-data/zip5.json)), e.g.:
+```
+Ethereum Proposal ID
+Proposal ID: 0x123456...
+Encoded Proposal: 0x0000...
 ```
 
 ## Practical Examples
