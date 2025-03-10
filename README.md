@@ -5,7 +5,7 @@
 
 ## Installation
 
-To install and use the `zkgov-check` tool, follow these steps. Note that the tool is distributed via GitHub Releases, but you may need to build it locally if a compatible binary for your platform (e.g., macOS, Linux, Windows) is not available.
+To install and use the `zkgov-check` tool, follow these steps. Note that the tool is distributed via GitHub Releases, but you may need to build it locally if a compatible binary for your platform is not available.
 
 ### Prerequisites
 - curl
@@ -13,11 +13,10 @@ To install and use the `zkgov-check` tool, follow these steps. Note that the too
 
 ### Option 1: Install from GitHub Release
 
-1. Run the install script:
+- Run the install script:
 
 ```bash
-chmod +x install.sh
-./install.sh
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/cyfrin/zksync-upgrade-verification-rs/releases/latest/download/zkgov-check-installer.sh | sh
 ```
 
 ### Option 2: Build from Source
@@ -172,6 +171,3 @@ Using the ZKsync Upgrade Verification Tool can significantly enhance the securit
 ## Contributing
 
 Contributions are welcome! Please fork the repository and submit a pull request with your changes.
-
-## License
-
