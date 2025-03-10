@@ -5,37 +5,19 @@
 
 ## Installation
 
-To install and use the `zkgov-check` tool, follow these steps. Note that the tool is distributed via GitHub Releases, but you may need to build it locally if a compatible binary for your platform (e.g., macOS, Linux, Windows) is not available.
+To install and use the `zkgov-check` tool, follow these steps. Note that the tool is distributed via GitHub Releases, but you may need to build it locally if a compatible binary for your platform is not available.
 
 ### Prerequisites
 - curl
 - A ZKsync RPC URL (set as an environment variable, e.g., `export ZKSYNC_RPC_URL=https://zksync-era-rpc.example.com`).
 
 ### Option 1: Install from GitHub Release
-If a binary for your platform is available in the GitHub Release, you can download and install it directly:
 
-1. Download the latest `zkgov-check` binary for your platform (e.g., macOS, Linux) from the [releases page](https://github.com/Cyfrin/zksync-upgrade-verification-rs/releases):
-   ```bash
-   curl -L https://github.com/Cyfrin/zksync-upgrade-verification-rs/releases/download/v0.1.0/zkgov-check-linux -o zkgov-check
-   ```
-   (Replace `zkgov-check-linux` with the appropriate file for your OS, e.g., `zkgov-check-macos`)
+- Run the install script:
 
-2. Make the binary executable:
-   ```bash
-   chmod +x zkgov-check
-   ```
-
-3. Move it to a system directory (e.g., `/usr/local/bin/` on macOS/Linux):
-   ```bash
-   sudo mv zkgov-check /usr/local/bin/
-   ```
-
-4. Verify the installation:
-   ```bash
-   zkgov-check --help
-   ```
-
-**Note**: If the release doesn’t include a binary for your platform (e.g., Windows), proceed to Option 2.
+```bash
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/cyfrin/zksync-upgrade-verification-rs/releases/latest/download/zkgov-check-installer.sh | sh
+```
 
 ### Option 2: Build from Source
 If no pre-built binary is available or you prefer to build locally, follow these steps:
@@ -87,7 +69,7 @@ zkgov-check get-upgrades <tx-hash> --rpc-url $ZKSYNC_RPC_URL --decode
 ```
 **Output**: A detailed list of targets, values, and calldata, plus any Ethereum transactions if `sendToL1` is called.
 
-### 3. Compute the Ethereum Proposal ID
+### 3. Compute the Ethereum Proposal ID from a transaction hash:
 Generate the Ethereum-side proposal hash for verification:
 ```bash
 zkgov-check get-eth-id <tx-hash> --rpc-url $ZKSYNC_RPC_URL
@@ -95,6 +77,18 @@ zkgov-check get-eth-id <tx-hash> --rpc-url $ZKSYNC_RPC_URL
 **Output**: The Keccak-256 hash for each Ethereum transaction in the proposal, e.g.:
 ```
 Ethereum proposal ID #1: 0x5ebd899d...
+```
+
+### 4. Compute the Ethereum Proposal ID from a proposale file (json):
+Generate the Ethereum-side proposal hash for verification:
+```bash
+zkgov-check get-eth-id --from-file <json-file>
+```
+**Output**: The Keccak-256 hash for the calls in the json file (see the file structure [here](/test-data/zip5.json)), e.g.:
+```
+Ethereum Proposal ID
+Proposal ID: 0x123456...
+Encoded Proposal: 0x0000...
 ```
 
 ## Practical Examples
@@ -189,6 +183,3 @@ Using the ZKsync Upgrade Verification Tool can significantly enhance the securit
 ## Contributing
 
 Contributions are welcome! Please fork the repository and submit a pull request with your changes.
-
-## License
-
