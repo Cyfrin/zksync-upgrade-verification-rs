@@ -14,7 +14,7 @@ use std::fs;
 use serde::{Deserialize, Serialize};
 use reqwest;
 
-const VERSION: &str = "0.0.6";
+const VERSION: &str = "0.0.2";
 const PROPOSAL_CREATED_TOPIC: &str = "0x7d84a6263ae0d98d3329bd7b46bb4e8d6f98cd35a7adb45c274c8b7fd5ebd5e0";
 const DEFAULT_GOVERNOR: &str = "0x76705327e682F2d96943280D99464Ab61219e34f";
 
@@ -24,23 +24,33 @@ struct Cli {
     #[command(subcommand)]
     command: Commands,
 
-    #[arg(long, global = true)]
+    #[arg(long, global = true, help = "RPC URL for zkSync Era (can also be set via ZKSYNC_RPC_URL env var)")]
     rpc_url: Option<String>,
 
-    #[arg(long, global = true, default_value = DEFAULT_GOVERNOR)]
+    #[arg(long, global = true, default_value = DEFAULT_GOVERNOR, help = "Governor contract address")]
     governor: String,
 
-    #[arg(long, global = true)]
+    #[arg(long, global = true, help = "Decode calldata for each transaction")]
     decode: bool,
 }
 
 #[derive(Subcommand)]
 enum Commands {
-    GetZkId { tx_hash: String },
-    GetUpgrades { tx_hash: String },
+    #[command(about = "Get the zkSync proposal ID from a transaction hash")]
+    GetZkId { 
+        #[arg(help = "Transaction hash to analyze")]
+        tx_hash: String 
+    },
+    #[command(about = "List proposal actions and Ethereum transactions")]
+    GetUpgrades { 
+        #[arg(help = "Transaction hash to analyze")]
+        tx_hash: String 
+    },
+    #[command(about = "Compute the Ethereum proposal ID from a transaction hash or JSON file")]
     GetEthId { 
+        #[arg(help = "Transaction hash to analyze (not required if --from-file is used)")]
         tx_hash: Option<String>,
-        #[arg(long)]
+        #[arg(long, help = "Path to a JSON file containing proposal data")]
         from_file: Option<String>,
     },
 }
