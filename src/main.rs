@@ -301,7 +301,7 @@ pub async fn get_upgrades(tx_hash: &str, rpc_url: &str, should_decode: bool) -> 
         .zip(calldatas.iter())
         .enumerate()
     {
-        println!("\nZKsync Transaction #{}:", i + 1);
+        println!("\n{}", format!("ZKsync Transaction #{}:", i + 1).bold());
         print_field("Target Address", &format!("{:?}", target));
         print_field("Value", &value.to_string());
         print_field("Calldata", &format!("0x{}", hex::encode(calldata.as_ref())));
@@ -310,7 +310,7 @@ pub async fn get_upgrades(tx_hash: &str, rpc_url: &str, should_decode: bool) -> 
             && calldata.len() >= 4
             && &calldata[0..4] == hex::decode("62f84b24")?.as_slice()
         {
-            println!("{}", "(ETH transaction)".bold());
+            println!("{}", "(ETH transaction)".bold().green());
 
             // Decode sendToL1(bytes)
             let send_to_l1_data = decode(&[ParamType::Bytes], &calldata[4..])?;
@@ -342,18 +342,18 @@ pub async fn get_upgrades(tx_hash: &str, rpc_url: &str, should_decode: bool) -> 
                 let target = op_tuple[0].clone().into_address().expect("Expected an address");
                 let value = op_tuple[1].clone().into_uint().expect("Expected a uint");
                 let data = op_tuple[2].clone().into_bytes().expect("Expected bytes");
-                println!("  Call:");
-                println!("  Target: {:?}", target);
-                println!("  Value: {}", value);
-                println!("  Calldata:  0x{}", hex::encode(&data));
+                println!("  {}", "Call:".bold());
+                print_field("    Target", &format!("{:?}", target));
+                print_field("    Value", &value.to_string());
+                print_field("    Calldata", &format!("0x{}", hex::encode(&data)));
                 
                 if should_decode {
                     let function_name = decode_calldata(&data).await?;
-                    println!("  Function: {} \n", function_name);
+                    println!("    {}: {} \n", "Function".bold(), function_name.green());
                 }
             }
-            println!("\nExecutor: {:?}", executor);
-            println!("Salt: 0x{}", hex::encode(&salt));
+            print_field("\nExecutor", &format!("{:?}", executor));
+            print_field("Salt", &format!("0x{}", hex::encode(&salt)));
         }
     }
     Ok(())
@@ -450,23 +450,27 @@ pub async fn get_eth_id(tx_hash: &str, rpc_url: &str, _governor: &str) -> Result
             // Encode and hash the proposal
             let encoded_proposal = encode(&[proposal_token]);
             let hash = keccak256(&encoded_proposal);
-            println!("Ethereum proposal ID #{}: 0x{}", eth_tx_counter, hex::encode(hash));
+            println!("{}: 0x{}", format!("Ethereum proposal ID #{}", eth_tx_counter).bold(), hex::encode(hash).green());
         }
     }
 
     if eth_tx_counter == 0 {
-        return Err(eyre!("Error: No ETH transactions found in proposal."));
+        return Err(eyre!("{}", "Error: No ETH transactions found in proposal.".red().bold()));
     }
+
+    println!("\n{}", format!("Total ETH transactions (and therefore, contracts): {}", eth_tx_counter).bold());
+    println!("{}", "Please copy paste the contract you're looking for the signature for into the test folder, and run the main test with:".bold());
+    println!("{}", "  forge test --mt getHash --mc (contract_name) -vv".green());
 
     Ok(())
 }
 
 fn print_header(header: &str) {
-    println!("\n{}", header.underline());
+    println!("\n{}", header.underline().bold());
 }
 
 fn print_field(label: &str, value: &str) {
-    println!("{}: {}", label, value.green());
+    println!("{}: {}", label, value.green().bold());
 }
 
 #[tokio::main]
@@ -481,7 +485,7 @@ async fn main() -> Result<()> {
         .clone()
         .or_else(|| env::var("ZKSYNC_RPC_URL").ok())
         .ok_or_else(|| {
-            eyre!("No RPC URL provided. Either use --rpc-url or set ZKSYNC_RPC_URL environment variable")
+            eyre!("{}", "No RPC URL provided. Either use --rpc-url or set ZKSYNC_RPC_URL environment variable".red().bold())
         })?;
     match cli.command {
         Commands::GetZkId { tx_hash } => {
