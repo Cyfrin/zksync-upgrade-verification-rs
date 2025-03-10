@@ -12,6 +12,7 @@ use std::env;
 use std::str::FromStr;
 use std::fs;
 use serde::{Deserialize, Serialize};
+use serde_json;
 use reqwest;
 
 const VERSION: &str = "0.0.2";
